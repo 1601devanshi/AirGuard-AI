@@ -1,0 +1,2 @@
+model,training_observations,testing_observations,MAE,RMSE
+"SARIMA(1,0,1)(1,0,1,24)",1216,168,5.933931638800663,7.427209230114658
