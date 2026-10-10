@@ -108,17 +108,63 @@ def metric_card(label, value, note, accent="#0d9488"):
 
 @st.cache_data(ttl=600, show_spinner=False)
 def fetch_air_quality(lat, lon):
-    r = requests.get(AQ_URL, params={"latitude":lat,"longitude":lon,"current":"us_aqi,pm2_5,pm10","hourly":"us_aqi,pm2_5,pm10","forecast_days":2,"timezone":"auto"}, timeout=25)
-    r.raise_for_status(); data = r.json()
-    if "current" not in data or "hourly" not in data: raise ValueError("The air-quality service returned incomplete data.")
-    return data
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current": "us_aqi,pm2_5,pm10",
+        "hourly": "us_aqi,pm2_5,pm10",
+        "forecast_days": 2,
+        "timezone": "auto",
+    }
+    try:
+        response = requests.get(AQ_URL, params=params, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        if not isinstance(data, dict) or "current" not in data or "hourly" not in data:
+            raise RuntimeError("The air-quality service returned incomplete data. Please refresh shortly.")
+        return data
+    except requests.exceptions.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        if status == 429:
+            raise RuntimeError("The air-quality service is receiving too many requests. Wait a few minutes before refreshing.") from exc
+        raise RuntimeError(f"The air-quality service returned HTTP {status}. Please try again later.") from exc
+    except requests.exceptions.Timeout as exc:
+        raise RuntimeError("The air-quality service timed out. Please try again shortly.") from exc
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError("Could not connect to the air-quality service. Please try again shortly.") from exc
+    except ValueError as exc:
+        raise RuntimeError("The air-quality service returned invalid data. Please try again later.") from exc
 
-@st.cache_data(ttl=600, show_spinner=False)
+
+@st.cache_data(ttl=1800, show_spinner=False)
 def fetch_weather(lat, lon):
-    r = requests.get(WEATHER_URL, params={"latitude":lat,"longitude":lon,"current":"temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m","hourly":"temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,wind_speed_10m,weather_code,apparent_temperature","daily":"weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max","forecast_days":3,"timezone":"auto"}, timeout=25)
-    r.raise_for_status(); data = r.json()
-    if "current" not in data: raise ValueError("The weather service returned incomplete data.")
-    return data
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current": "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m",
+        "hourly": "temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,wind_speed_10m,weather_code,apparent_temperature",
+        "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max",
+        "forecast_days": 3,
+        "timezone": "auto",
+    }
+    try:
+        response = requests.get(WEATHER_URL, params=params, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        if not isinstance(data, dict) or "current" not in data:
+            raise RuntimeError("The weather service returned incomplete data. Please refresh shortly.")
+        return data
+    except requests.exceptions.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        if status == 429:
+            raise RuntimeError("The weather service is temporarily rate-limiting requests. Wait a few minutes before refreshing.") from exc
+        raise RuntimeError(f"The weather service returned HTTP {status}. Please try again later.") from exc
+    except requests.exceptions.Timeout as exc:
+        raise RuntimeError("The weather service timed out. Please try again shortly.") from exc
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError("Could not connect to the weather service. Please try again shortly.") from exc
+    except ValueError as exc:
+        raise RuntimeError("The weather service returned invalid data. Please try again later.") from exc
 
 def make_hourly_frame(hourly, columns):
     frame = pd.DataFrame({"time":pd.to_datetime(hourly.get("time", []), errors="coerce")})
@@ -437,6 +483,8 @@ try:
             st.info("Forecasts are model-based estimates and may differ from observations at a nearby weather station. Use official alerts for severe weather.")
     st.markdown("---")
     st.markdown('<div style="text-align:center;color:#8291a5;font-size:11px;padding:10px">AIRGUARD AI · ENVIRONMENTAL INTELLIGENCE<br>Powered by Open-Meteo · Educational project dashboard</div>',unsafe_allow_html=True)
+except RuntimeError as exc:
+    st.warning(str(exc))
 except requests.exceptions.Timeout:
     st.error("The live data service took too long to respond. Please use Refresh live data and try again.")
 except requests.exceptions.RequestException as exc:
