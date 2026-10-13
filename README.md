@@ -7,7 +7,7 @@
 
 🚀 Live Demo
 
-Live Dashboard: https://airguard-ai-ally.onrender.com
+Live Dashboard: https://airguard-ai-1-p7z0.onrender.com
 
 ## ✨ Features
 
