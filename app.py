@@ -1066,12 +1066,12 @@ try:
     st.markdown("---")
 
     st.markdown('<div style="text-align:center;color:#8291a5;font-size:11px;padding:10px">AIRGUARD AI · ENVIRONMENTAL INTELLIGENCE<br>Powered by Open-Meteo · Educational project dashboard</div>',unsafe_allow_html=True)
-<<<<<<< HEAD
+
 except RuntimeError as exc:
     st.warning(str(exc))
-=======
 
->>>>>>> 02d60ac (Add SARIMA forecasting to AirGuard AI)
+
+
 except requests.exceptions.Timeout:
 
     st.error("The live data service took too long to respond. Please use Refresh live data and try again.")
