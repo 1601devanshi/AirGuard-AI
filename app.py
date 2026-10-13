@@ -213,7 +213,7 @@ def metric_card(label, value, note, accent="#0d9488"):
 
     st.markdown(f'<div class="metric-card" style="border-top-color:{accent}"><div class="metric-label">{label}</div><div class="metric-value">{value}</div><div class="metric-note">{note}</div></div>', unsafe_allow_html=True)
 
-<<<<<<< HEAD
+
 @st.cache_data(ttl=600, show_spinner=False)
 def fetch_air_quality(lat, lon):
     params = {
@@ -273,7 +273,7 @@ def fetch_weather(lat, lon):
         raise RuntimeError("Could not connect to the weather service. Please try again shortly.") from exc
     except ValueError as exc:
         raise RuntimeError("The weather service returned invalid data. Please try again later.") from exc
-=======
+
 
 
 @st.cache_data(ttl=600, show_spinner=False)
@@ -301,7 +301,7 @@ def fetch_air_quality(lat, lon):
     if "current" not in data or "hourly" not in data: raise ValueError("The air-quality service returned incomplete data.")
 
     return data
->>>>>>> 02d60ac (Add SARIMA forecasting to AirGuard AI)
+
 
 
 
